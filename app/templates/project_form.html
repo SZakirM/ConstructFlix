@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - ConstructFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #1f1f1f;
+        border-radius: 8px;
+        padding: 40px;
+    }
+    
+    .form-header {
+        margin-bottom: 30px;
+    }
+    
+    .form-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: #8c8c8c;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h1>{{ title }}</h1>
+        <p>Fill in the details to create a new construction project</p>
+    </div>
+    
+    <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        
+        <div class="form-row">
+            <div class="form-group full-width">
+                <label class="form-label">Project Name *</label>
+                <input type="text" name="name" class="form-control" required placeholder="Enter project name">
+            </div>
+            
+            <div class="form-group full-width">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4" placeholder="Describe the project"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" placeholder="Project location">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Budget</label>
+                <input type="number" name="budget" class="form-control" placeholder="0.00" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Start Date *</label>
+                <input type="date" name="start_date" class="form-control" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">End Date *</label>
+                <input type="date" name="end_date" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-netflix">
+                <i class="bi bi-check-circle"></i> Create Project
+            </button>
+            <a href="{{ url_for('main.dashboard') }}" class="btn-outline-netflix">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

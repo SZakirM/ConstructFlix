@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - ConstructFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .page-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+    }
+    
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .project-card {
+        background: #1f1f1f;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    
+    .project-card:hover {
+        transform: scale(1.02);
+    }
+    
+    .project-card-image {
+        height: 140px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .project-card-image i {
+        font-size: 48px;
+        color: white;
+    }
+    
+    .project-card-body {
+        padding: 20px;
+    }
+    
+    .project-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .project-card-meta {
+        display: flex;
+        justify-content: space-between;
+        color: #8c8c8c;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+    
+    .project-card-progress {
+        height: 4px;
+        background: #333;
+        border-radius: 2px;
+        margin-bottom: 10px;
+    }
+    
+    .project-card-progress-bar {
+        height: 100%;
+        background: #e50914;
+        border-radius: 2px;
+    }
+    
+    .project-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    .badge-active { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+    .badge-planning { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .badge-completed { background: rgba(0, 123, 255, 0.2); color: #007bff; }
+    .badge-on_hold { background: rgba(108, 117, 125, 0.2); color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Projects</h1>
+    <a href="{{ url_for('main.new_project') }}" class="btn-netflix">
+        <i class="bi bi-plus-circle"></i> New Project
+    </a>
+</div>
+
+<div class="projects-grid">
+    {% if projects %}
+        {% for project in projects %}
+        <div class="project-card" onclick="window.location.href='{{ url_for('main.project_detail', project_id=project.id) }}'">
+            <div class="project-card-image">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="project-card-body">
+                <div class="project-card-title">{{ project.name }}</div>
+                <div class="project-card-meta">
+                    <span><i class="bi bi-geo-alt"></i> {{ project.location or 'N/A' }}</span>
+                    <span><i class="bi bi-calendar"></i> {{ project.end_date.strftime('%Y-%m-%d') }}</span>
+                </div>
+                <div class="project-card-progress">
+                    <div class="project-card-progress-bar" style="width: {{ project.progress }}%"></div>
+                </div>
+                <div class="project-card-footer">
+                    <span class="badge badge-{{ project.status }}">{{ project.status }}</span>
+                    <span style="color: #8c8c8c; font-size: 14px;">{{ project.tasks|length }} tasks</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px; background: #1f1f1f; border-radius: 8px;">
+            <i class="bi bi-folder-plus" style="font-size: 64px; color: #e50914; margin-bottom: 20px;"></i>
+            <h2>No Projects Yet</h2>
+            <p style="color: #8c8c8c; margin: 15px 0 25px;">Start by creating your first construction project</p>
+            <a href="{{ url_for('main.new_project') }}" class="btn-netflix">Create Project</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

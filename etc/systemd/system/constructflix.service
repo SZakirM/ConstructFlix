@@ -1,0 +1,22 @@
+[Unit]
+Description=ConstructFlix Production Service
+After=network.target postgresql.service redis.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/constructflix
+Environment="PATH=/var/www/constructflix/venv/bin"
+EnvironmentFile=/var/www/constructflix/.env.production
+ExecStart=/var/www/constructflix/venv/bin/gunicorn \
+    --worker-class eventlet \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --access-logfile /var/log/constructflix/access.log \
+    --error-logfile /var/log/constructflix/error.log \
+    run:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

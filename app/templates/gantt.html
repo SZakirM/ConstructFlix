@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Gantt Chart - {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='js/gantt/frappe-gantt.css') }}">
+<style>
+    .gantt-container {
+        background: #1f1f1f;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .gantt-task-completed {
+        background: #28a745 !important;
+    }
+    
+    .gantt-task-in_progress {
+        background: #007bff !important;
+    }
+    
+    .gantt-task-delayed {
+        background: #dc3545 !important;
+    }
+    
+    .gantt-task-not_started {
+        background: #6c757d !important;
+    }
+    
+    .gantt-tooltip {
+        background: #141414 !important;
+        border: 1px solid #333 !important;
+        color: #fff !important;
+        padding: 10px !important;
+        border-radius: 4px !important;
+    }
+    
+    .gantt-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .gantt-control-btn {
+        background: #333;
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .gantt-control-btn:hover {
+        background: #e50914;
+    }
+    
+    .gantt-control-btn.active {
+        background: #e50914;
+    }
+    
+    .critical-path-info {
+        background: #1f1f1f;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .critical-path-info h3 {
+        color: #e50914;
+        margin-bottom: 15px;
+    }
+    
+    .critical-path-tasks {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .critical-task {
+        background: #dc3545;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1 class="row-title">{{ project.name }} - Gantt Chart</h1>
+        <div>
+            <button class="btn-netflix" onclick="saveSchedule()">
+                <i class="bi bi-save"></i> Save Version
+            </button>
+            <button class="btn-outline-netflix" onclick="exportGantt()">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- Gantt Controls -->
+    <div class="gantt-controls">
+        <button class="gantt-control-btn active" onclick="changeView('day')">Day</button>
+        <button class="gantt-control-btn" onclick="changeView('week')">Week</button>
+        <button class="gantt-control-btn" onclick="changeView('month')">Month</button>
+        <button class="gantt-control-btn" onclick="showCriticalPath()">Show Critical Path</button>
+        <button class="gantt-control-btn" onclick="fitView()">Fit to Screen</button>
+    </div>
+    
+    <!-- Gantt Container -->
+    <div class="gantt-container">
+        <svg id="gantt"></svg>
+    </div>
+    
+    <!-- Critical Path Info (initially hidden) -->
+    <div id="criticalPathInfo" class="critical-path-info" style="display: none;">
+        <h3>Critical Path</h3>
+        <div class="critical-path-tasks" id="criticalPathTasks"></div>
+        <p id="projectDuration" class="mt-3"></p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/gantt/frappe-gantt.min.js') }}"></script>
+<script>
+    let gantt;
+    let tasks = {{ gantt_data|tojson|safe }};
+    let currentView = 'day';
+    
+    // Initialize Gantt
+    document.addEventListener('DOMContentLoaded', function() {
+        gantt = new Gantt("#gantt", tasks, {
+            on_click: function(task) {
+                showTaskDetails(task);
+            },
+            on_date_change: function(task, start, end) {
+                updateTaskDates(task.id, start, end);
+            },
+            on_progress_change: function(task, progress) {
+                updateTaskProgress(task.id, progress);
+            },
+            on_view_change: function(view) {
+                currentView = view;
+            },
+            custom_popup_html: function(task) {
+                return `
+                    <div class="gantt-tooltip">
+                        <strong>${task.name}</strong><br>
+                        Status: ${task.status}<br>
+                        Progress: ${task.progress}%<br>
+                        Assignee: ${task.assignee}<br>
+                        Start: ${new Date(task.start).toLocaleDateString()}<br>
+                        End: ${new Date(task.end).toLocaleDateString()}
+                    </div>
+                `;
+            }
+        });
+    });
+    
+    // Change view
+    function changeView(view) {
+        document.querySelectorAll('.gantt-control-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        gantt.change_view_mode(view);
+    }
+    
+    // Fit to screen
+    function fitView() {
+        gantt.fit_view();
+    }
+    
+    // Show critical path
+    function showCriticalPath() {
+        fetch(`/api/projects/{{ project.id }}/critical-path`)
+            .then(response => response.json())
+            .then(data => {
+                const info = document.getElementById('criticalPathInfo');
+                const tasksDiv = document.getElementById('criticalPathTasks');
+                const durationP = document.getElementById('projectDuration');
+                
+                tasksDiv.innerHTML = '';
+                data.critical_path.forEach(taskId => {
+                    const task = tasks.find(t => t.id === `task_${taskId}`);
+                    if (task) {
+                        const taskEl = document.createElement('span');
+                        taskEl.className = 'critical-task';
+                        taskEl.textContent = task.name;
+                        tasksDiv.appendChild(taskEl);
+                    }
+                });
+                
+                durationP.textContent = `Total Project Duration: ${data.total_duration} days`;
+                info.style.display = 'block';
+            });
+    }
+    
+    // Update task dates via API
+    function updateTaskDates(taskId, start, end) {
+        const taskIdNum = taskId.replace('task_', '');
+        fetch(`/api/tasks/${taskIdNum}/update-dates`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                start_date: start.toISOString().split('T')[0],
+                end_date: end.toISOString().split('T')[0]
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Task dates updated successfully', 'success');
+            }
+        });
+    }
+    
+    // Update task progress
+    function updateTaskProgress(taskId, progress) {
+        const taskIdNum = taskId.replace('task_', '');
+        fetch(`/api/tasks/${taskIdNum}/update-progress`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ progress: progress })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Progress updated', 'success');
+            }
+        });
+    }
+    
+    // Save schedule version
+    function saveSchedule() {
+        const versionName = prompt('Enter version name:', `v${new Date().toISOString().split('T')[0]}`);
+        if (versionName) {
+            fetch(`/api/projects/{{ project.id }}/save-version`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    name: versionName,
+                    tasks: tasks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Schedule version saved!', 'success');
+                }
+            });
+        }
+    }
+    
+    // Export as image
+    function exportGantt() {
+        // Simple export - you can use libraries like html2canvas for actual image export
+        alert('Export functionality coming soon!');
+    }
+    
+    // Show task details modal
+    function showTaskDetails(task) {
+        const modal = document.getElementById('videoModal');
+        const taskId = task.id.replace('task_', '');
+        
+        fetch(`/api/tasks/${taskId}`)
+            .then(response => response.json())
+            .then(data => {
+                const modalContent = `
+                    <h3>${data.name}</h3>
+                    <p>${data.description || 'No description'}</p>
+                    <div class="mt-3">
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Priority:</strong> ${data.priority}</p>
+                        <p><strong>Assignee:</strong> ${data.assignee || 'Unassigned'}</p>
+                        <p><strong>Progress:</strong> ${data.progress}%</p>
+                        <p><strong>Start:</strong> ${data.start_date}</p>
+                        <p><strong>End:</strong> ${data.end_date}</p>
+                        <p><strong>Duration:</strong> ${data.duration} days</p>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn-netflix" onclick="closeModal()">Close</button>
+                        <button class="btn-outline-netflix" onclick="window.location.href='/task/${taskId}'">View Details</button>
+                    </div>
+                `;
+                openModal(modalContent);
+            });
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#28a745' : '#dc3545'};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+</script>
+{% endblock %}

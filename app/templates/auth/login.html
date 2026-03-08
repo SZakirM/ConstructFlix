@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - ConstructFlix{% endblock %}
+
+{% block content %}
+<div class="row-container" style="min-height: 80vh; display: flex; align-items: center;">
+    <div style="width: 100%; max-width: 450px; margin: 0 auto;">
+        <div style="background: rgba(0,0,0,0.75); padding: 60px; border-radius: 8px;">
+            <h1 class="row-title" style="font-size: 32px; margin-bottom: 30px;">Sign In</h1>
+            
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email or phone number" required
+                           style="background: #333; border: none; padding: 16px;">
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" name="password" class="form-control" placeholder="Password" required
+                           style="background: #333; border: none; padding: 16px;">
+                </div>
+                
+                <button type="submit" class="btn-netflix" style="width: 100%; padding: 16px; font-size: 16px; margin-bottom: 15px;">
+                    Sign In
+                </button>
+                
+                <div style="display: flex; justify-content: space-between; color: #b3b3b3; font-size: 14px;">
+                    <label>
+                        <input type="checkbox" name="remember_me" style="margin-right: 5px;"> Remember me
+                    </label>
+                    <a href="{{ url_for('auth.forgot_password') }}" style="color: #b3b3b3; text-decoration: none;">Need help?</a>
+                </div>
+            </form>
+            
+            <div style="margin-top: 40px; color: #b3b3b3;">
+                <p>New to ConstructFlix? 
+                    <a href="{{ url_for('auth.register') }}" style="color: #fff; text-decoration: none; font-weight: 600;">Sign up now</a>
+                </p>
+                <p style="font-size: 13px; margin-top: 15px;">
+                    This page is protected by Google reCAPTCHA to ensure you're not a bot. 
+                    <a href="#" style="color: #0071eb; text-decoration: none;">Learn more.</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

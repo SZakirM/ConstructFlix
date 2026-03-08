@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - ConstructFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        font-weight: 700;
+    }
+    
+    .profile-info h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .profile-info p {
+        color: #8c8c8c;
+    }
+    
+    .profile-section {
+        background: #1f1f1f;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-section h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            {{ user.first_name[0] }}{{ user.last_name[0] }}
+        </div>
+        <div class="profile-info">
+            <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+            <p>{{ user.email }}</p>
+            <p>Member since: {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</p>
+        </div>
+    </div>
+    
+    <div class="profile-section">
+        <h2>Personal Information</h2>
+        <form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-control" value="{{ user.first_name }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-control" value="{{ user.last_name }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" value="{{ user.email }}">
+            </div>
+            <button type="submit" class="btn-netflix" style="margin-top: 20px;">Update Profile</button>
+        </form>
+    </div>
+    
+    <div class="profile-section">
+        <h2>Change Password</h2>
+        <form>
+            <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" class="form-control" placeholder="Enter current password">
+            </div>
+            <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-control" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" class="form-control" placeholder="Confirm new password">
+            </div>
+            <button type="submit" class="btn-netflix" style="margin-top: 20px;">Change Password</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}ConstructFlix - Construction Project Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero {
+        position: relative;
+        height: 80vh;
+        min-height: 500px;
+        background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(20,20,20,1) 100%),
+                    url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1920&q=80') center/cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        padding: 0 20px;
+        z-index: 1;
+    }
+
+    .hero h1 {
+        font-size: 64px;
+        font-weight: 800;
+        margin-bottom: 20px;
+        line-height: 1.1;
+    }
+
+    .hero h1 span {
+        color: #e50914;
+    }
+
+    .hero p {
+        font-size: 24px;
+        color: #e5e5e5;
+        margin-bottom: 30px;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn-hero {
+        padding: 15px 40px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-hero-primary {
+        background: #e50914;
+        color: white;
+        border: none;
+    }
+
+    .btn-hero-primary:hover {
+        background: #f40612;
+    }
+
+    .btn-hero-secondary {
+        background: rgba(109, 109, 110, 0.7);
+        color: white;
+        border: none;
+    }
+
+    .btn-hero-secondary:hover {
+        background: rgba(109, 109, 110, 0.4);
+    }
+
+    /* Features Section */
+    .features {
+        padding: 80px 40px;
+        background: #141414;
+    }
+
+    .features-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .features-title {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 50px;
+        text-align: center;
+        color: #fff;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+    }
+
+    .feature-card {
+        background: #2a2a2a;
+        border-radius: 8px;
+        padding: 30px;
+        transition: transform 0.3s;
+    }
+
+    .feature-card:hover {
+        transform: scale(1.02);
+    }
+
+    .feature-icon {
+        font-size: 48px;
+        color: #e50914;
+        margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #fff;
+    }
+
+    .feature-card p {
+        color: #8c8c8c;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    /* Stats Section */
+    .stats {
+        padding: 60px 40px;
+        background: #000;
+    }
+
+    .stats-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 40px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 48px;
+        font-weight: 800;
+        color: #e50914;
+    }
+
+    .stat-label {
+        font-size: 16px;
+        color: #8c8c8c;
+    }
+
+    /* CTA Section */
+    .cta {
+        padding: 100px 40px;
+        background: linear-gradient(180deg, #141414 0%, #000 100%);
+        text-align: center;
+    }
+
+    .cta h2 {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: #fff;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 50px 40px;
+        background: #000;
+        color: #8c8c8c;
+        text-align: center;
+    }
+
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .footer-links a {
+        color: #8c8c8c;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .footer-links a:hover {
+        color: #fff;
+    }
+
+    .footer-logo {
+        font-size: 24px;
+        font-weight: 800;
+        color: #e50914;
+        margin-bottom: 20px;
+    }
+
+    .footer-logo span {
+        color: #fff;
+        font-weight: 400;
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 36px;
+        }
+        
+        .hero p {
+            font-size: 18px;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-hero {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Build Better.<br>Manage <span>Smarter</span>.</h1>
+        <p>Professional construction project management made simple. Plan, schedule, and track your projects with ease.</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('auth.register') }}" class="btn-hero btn-hero-primary">
+                <i class="bi bi-rocket-takeoff"></i> Get Started
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn-hero btn-hero-secondary">
+                <i class="bi bi-play-circle"></i> Sign In
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features">
+    <div class="features-container">
+        <h2 class="features-title">Everything You Need to Manage Your Projects</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-kanban"></i>
+                </div>
+                <h3>Project Planning</h3>
+                <p>Create and manage projects with detailed planning tools. Set budgets, timelines, and assign resources efficiently.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <h3>Smart Scheduling</h3>
+                <p>Visualize your project timeline with interactive Gantt charts. Track milestones and deadlines effortlessly.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3>Team Collaboration</h3>
+                <p>Assign tasks to team members, track progress, and communicate effectively within your project.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <h3>Progress Tracking</h3>
+                <p>Monitor project progress with real-time dashboards. Identify risks and stay on top of deadlines.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <h3>Budget Management</h3>
+                <p>Track expenses and manage budgets effectively. Get alerts when spending approaches limits.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                </div>
+                <h3>Reports & Analytics</h3>
+                <p>Generate comprehensive reports on project performance, team productivity, and resource utilization.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats">
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Projects Managed</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">2,000+</div>
+            <div class="stat-label">Team Members</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">98%</div>
+            <div class="stat-label">On-Time Delivery</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">$50M+</div>
+            <div class="stat-label">Budget Managed</div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta">
+    <h2>Ready to Transform Your Construction Management?</h2>
+    <a href="{{ url_for('auth.register') }}" class="btn-hero btn-hero-primary">
+        <i class="bi bi-rocket-takeoff"></i> Start Free Today
+    </a>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-logo">Construct<span>Flix</span></div>
+    <div class="footer-links">
+        <a href="#">About Us</a>
+        <a href="#">Contact</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Help Center</a>
+    </div>
+    <p>&copy; 2024 ConstructFlix. All rights reserved.</p>
+</footer>
+{% endblock %}
+

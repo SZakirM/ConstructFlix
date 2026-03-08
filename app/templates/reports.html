@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - {{ project.name }} - ConstructFlix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .report-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+    }
+    
+    .report-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: #1f1f1f;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    
+    .stat-card h3 {
+        font-size: 14px;
+        color: #8c8c8c;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+    
+    .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .progress-section {
+        margin-bottom: 40px;
+    }
+    
+    .progress-item {
+        margin-bottom: 15px;
+    }
+    
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+    }
+    
+    .progress-track {
+        height: 8px;
+        background: #333;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: #e50914;
+        border-radius: 4px;
+    }
+    
+    .table-container {
+        background: #1f1f1f;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #333;
+    }
+    
+    th {
+        background: #2a2a2a;
+        font-weight: 600;
+        color: #e5e5e5;
+    }
+    
+    td {
+        color: #8c8c8c;
+    }
+    
+    tr:hover td {
+        background: #252525;
+    }
+    
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-completed { background: rgba(40, 167, 69, 0.2); color: #28a745; }
+    .status-in_progress { background: rgba(0, 123, 255, 0.2); color: #007bff; }
+    .status-pending { background: rgba(108, 117, 125, 0.2); color: #6c757d; }
+    .status-overdue { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-header">
+    <div>
+        <h1>{{ project.name }} - Reports</h1>
+        <p style="color: #8c8c8c;">{{ project.location }}</p>
+    </div>
+    <div class="report-actions">
+        <button class="btn-outline-netflix" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+        </button>
+        <button class="btn-netflix">
+            <i class="bi bi-download"></i> Export PDF
+        </button>
+    </div>
+</div>
+
+<!-- Project Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Tasks</h3>
+        <div class="value">{{ stats.total_tasks }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Completed</h3>
+        <div class="value" style="color: #28a745;">{{ stats.completed_tasks }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>In Progress</h3>
+        <div class="value" style="color: #007bff;">{{ stats.in_progress_tasks }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Pending</h3>
+        <div class="value" style="color: #6c757d;">{{ stats.pending_tasks }}</div>
+    </div>
+</div>
+
+<!-- Progress Section -->
+<div class="progress-section">
+    <h2 class="section-title">Project Progress</h2>
+    
+    <div class="progress-item">
+        <div class="progress-label">
+            <span>Overall Completion</span>
+            <span>{{ ((stats.completed_tasks / stats.total_tasks * 100) if stats.total_tasks > 0 else 0) | round }}%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" style="width: {{ (stats.completed_tasks / stats.total_tasks * 100) if stats.total_tasks > 0 else 0 }}%"></div>
+        </div>
+    </div>
+    
+    <div class="progress-item">
+        <div class="progress-label">
+            <span>Budget Used</span>
+            <span>${{ stats.spent_budget | round(2) }} / ${{ stats.total_budget | round(2) }}</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" style="width: {{ (stats.spent_budget / stats.total_budget * 100) if stats.total_budget > 0 else 0 }}%"></div>
+        </div>
+    </div>
+    
+    <div class="progress-item">
+        <div class="progress-label">
+            <span>Milestones Achieved</span>
+            <span>{{ stats.achieved_milestones }} / {{ stats.total_milestones }}</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" style="width: {{ (stats.achieved_milestones / stats.total_milestones * 100) if stats.total_milestones > 0 else 0 }}%"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Tasks Table -->
+<div class="table-container">
+    <h2 class="section-title" style="padding: 20px 20px 0;">Task Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Task Name</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Budget</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td style="color: #fff;">{{ task.name }}</td>
+                <td>
+                    <span class="status-badge status-{{ task.status }}">
+                        {{ task.status }}
+                    </span>
+                </td>
+                <td>{{ task.progress }}%</td>
+                <td>{{ task.start_date.strftime('%Y-%m-%d') if task.start_date else '-' }}</td>
+                <td>{{ task.end_date.strftime('%Y-%m-%d') if task.end_date else '-' }}</td>
+                <td>${{ task.actual_cost | round(2) if task.actual_cost else 0 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Back Link -->
+<div style="margin-top: 30px;">
+    <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="btn-outline-netflix">
+        <i class="bi bi-arrow-left"></i> Back to Project
+    </a>
+</div>
+{% endblock %}
+

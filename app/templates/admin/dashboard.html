@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - ConstructFlix{% endblock %}
+
+{% block content %}
+<div class="row-container">
+    <h1 class="row-title">Admin Dashboard</h1>
+    
+    <!-- Stats Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="netflix-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <div class="card-info">
+                <i class="bi bi-people" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 32px;">{{ stats.total_users }}</div>
+                <div class="card-meta">Total Users</div>
+                <small class="text-muted">{{ stats.new_users }} new this month</small>
+            </div>
+        </div>
+        
+        <div class="netflix-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+            <div class="card-info">
+                <i class="bi bi-check-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 32px;">{{ stats.active_users }}</div>
+                <div class="card-meta">Active Users</div>
+                <small class="text-muted">{{ stats.unverified_users }} unverified</small>
+            </div>
+        </div>
+        
+        <div class="netflix-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <div class="card-info">
+                <i class="bi bi-building" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 32px;">{{ stats.total_projects }}</div>
+                <div class="card-meta">Total Projects</div>
+                <small class="text-muted">{{ stats.active_projects }} active</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row-container">
+        <h2 class="row-title">Quick Actions</h2>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="{{ url_for('admin.users') }}" class="btn-netflix">Manage Users</a>
+            <a href="{{ url_for('admin.projects') }}" class="btn-netflix">View All Projects</a>
+            <a href="{{ url_for('admin.system_logs') }}" class="btn-outline-netflix">System Logs</a>
+            <a href="{{ url_for('admin.system_stats') }}" class="btn-outline-netflix">System Stats</a>
+        </div>
+    </div>
+    
+    <!-- Recent Users -->
+    <div class="row-container">
+        <h2 class="row-title">Recent Users</h2>
+        <div class="netflix-card" style="padding: 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #1f1f1f; border-bottom: 1px solid #333;">
+                        <th style="padding: 15px; text-align: left;">User</th>
+                        <th style="padding: 15px; text-align: left;">Email</th>
+                        <th style="padding: 15px; text-align: left;">Role</th>
+                        <th style="padding: 15px; text-align: left;">Status</th>
+                        <th style="padding: 15px; text-align: left;">Joined</th>
+                        <th style="padding: 15px; text-align: left;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                    <tr style="border-bottom: 1px solid #333;">
+                        <td style="padding: 15px;">
+                            <div style="display: flex; align-items: center;">
+                                <div class="profile-img" style="margin-right: 10px;">
+                                    {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                </div>
+                                {{ user.full_name }}
+                            </div>
+                        </td>
+                        <td style="padding: 15px;">{{ user.email }}</td>
+                        <td style="padding: 15px;">
+                            <span class="badge" style="background: {% if user.role == 'admin' %}#e50914{% elif user.role == 'manager' %}#ffc107{% else %}#007bff{% endif %};">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td style="padding: 15px;">
+                            {% if user.is_active %}
+                                <span style="color: #28a745;">Active</span>
+                            {% else %}
+                                <span style="color: #dc3545;">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 15px;">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td style="padding: 15px;">
+                            <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" class="btn-outline-netflix" style="padding: 5px 10px; font-size: 12px;">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

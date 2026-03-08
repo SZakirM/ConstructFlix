@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Home - ConstructFlix{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row-container" style="margin-top: -20px;">
+    <div style="position: relative; height: 400px; border-radius: 8px; overflow: hidden; background: linear-gradient(135deg, #667eea, #764ba2);">
+        <div style="position: absolute; bottom: 50px; left: 50px; right: 50px;">
+            <h1 style="font-size: 48px; font-weight: 800; margin-bottom: 10px;">Welcome back, {{ current_user.first_name }}!</h1>
+            <p style="font-size: 20px; opacity: 0.9; margin-bottom: 20px;">Track your construction projects in real-time</p>
+            <a href="{{ url_for('main.new_project') }}" class="btn-netflix" style="padding: 12px 30px; font-size: 16px;">
+                <i class="bi bi-plus-circle me-2"></i>New Project
+            </a>
+            <button class="btn-outline-netflix" style="margin-left: 15px;" onclick="openModal('<h3>Quick Tour</h3><p>Watch how ConstructFlix helps you manage projects efficiently.</p>')">
+                <i class="bi bi-play-circle me-2"></i>Watch Tutorial
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row-container">
+    <h2 class="row-title">Your Stats</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div class="netflix-card" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+            <div class="card-info">
+                <i class="bi bi-building" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 28px;">{{ stats.total_projects }}</div>
+                <div class="card-meta">Total Projects</div>
+            </div>
+        </div>
+        
+        <div class="netflix-card" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+            <div class="card-info">
+                <i class="bi bi-play-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 28px;">{{ stats.active_projects }}</div>
+                <div class="card-meta">Active Projects</div>
+            </div>
+        </div>
+        
+        <div class="netflix-card" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+            <div class="card-info">
+                <i class="bi bi-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 28px;">{{ stats.at_risk_projects }}</div>
+                <div class="card-meta">At Risk</div>
+            </div>
+        </div>
+        
+        <div class="netflix-card" style="background: linear-gradient(135deg, #f43b47, #453a94);">
+            <div class="card-info">
+                <i class="bi bi-clock" style="font-size: 32px; margin-bottom: 10px;"></i>
+                <div class="card-title" style="font-size: 28px;">{{ stats.overdue_tasks }}</div>
+                <div class="card-meta">Overdue Tasks</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Projects Row -->
+<div class="row-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 class="row-title" style="margin-bottom: 0;">Continue Watching</h2>
+        <a href="{{ url_for('main.projects') }}" style="color: #e5e5e5; text-decoration: none;">See All <i class="bi bi-chevron-right"></i></a>
+    </div>
+    
+    <div class="row-cards">
+        {% if projects %}
+            {% for project in projects %}
+            <div class="netflix-card" onclick="window.location.href='{{ url_for('main.project_detail', project_id=project.id) }}'">
+                <div class="card-image">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="card-info">
+                    <div class="card-title">{{ project.name }}</div>
+                    <div class="card-meta">
+                        <span>{{ project.tasks|length }} tasks</span>
+                        <span>•</span>
+                        <span>{{ (project.end_date - now.date()).days }} days left</span>
+                    </div>
+                    <div class="card-progress">
+                        <div class="progress-bar" style="width: {{ project.progress }}%"></div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <span class="badge" style="background: {% if project.status == 'active' %}#28a745{% elif project.status == 'planning' %}#ffc107{% else %}#6c757d{% endif %}; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                            {{ project.status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; background: #1f1f1f; border-radius: 8px;">
+                <i class="bi bi-folder-plus" style="font-size: 48px; color: #e50914; margin-bottom: 15px;"></i>
+                <h3>No Projects Yet</h3>
+                <p style="color: #8c8c8c; margin-bottom: 20px;">Start by creating your first construction project</p>
+                <a href="{{ url_for('main.new_project') }}" class="btn-netflix">Create Project</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- My Tasks Row -->
+<div class="row-container">
+    <h2 class="row-title">My Tasks</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+        {% if tasks %}
+            {% for task in tasks %}
+            <div class="netflix-card" style="display: flex; align-items: center; padding: 15px;">
+                <div style="margin-right: 15px;">
+                    <i class="bi bi-check-circle" style="font-size: 24px; color: {% if task.status == 'completed' %}#28a745{% elif task.is_overdue %}#dc3545{% else %}#e50914{% endif %};"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div class="card-title" style="margin-bottom: 5px;">{{ task.name }}</div>
+                    <div class="card-meta">{{ task.project.name }}</div>
+                    <div class="card-progress" style="margin-top: 10px;">
+                        <div class="progress-bar" style="width: {{ task.progress }}%"></div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge" style="background: {% if task.status == 'completed' %}#28a745{% elif task.status == 'in_progress' %}#007bff{% elif task.is_overdue %}#dc3545{% else %}#6c757d{% endif %}; padding: 3px 8px; border-radius: 4px; font-size: 11px;">
+                        {{ task.status }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 30px; background: #1f1f1f; border-radius: 8px;">
+                <p>No tasks assigned to you yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upcoming Milestones Row -->
+<div class="row-container">
+    <h2 class="row-title">Coming Soon</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+        {% if upcoming_milestones %}
+            {% for milestone in upcoming_milestones %}
+            <div class="netflix-card" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a);">
+                <div class="card-info">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <i class="bi bi-trophy" style="font-size: 24px; color: #ffd700;"></i>
+                        <span style="color: #8c8c8c;">{{ (milestone.due_date - now.date()).days }} days left</span>
+                    </div>
+                    <div class="card-title">{{ milestone.name }}</div>
+                    <div class="card-meta">{{ milestone.project.name }}</div>
+                    <div style="margin-top: 15px;">
+                        <span class="badge" style="background: {% if milestone.status == 'achieved' %}#28a745{% elif milestone.due_date < now.date() %}#dc3545{% else %}#ffc107{% endif %};">
+                            {{ milestone.status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 30px; background: #1f1f1f; border-radius: 8px;">
+                <p>No upcoming milestones.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions Row -->
+<div class="row-container">
+    <h2 class="row-title">Quick Actions</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="window.location.href='{{ url_for('main.new_project') }}'">
+            <div class="card-info">
+                <i class="bi bi-plus-circle" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">New Project</div>
+                <div class="card-meta">Start a new construction project</div>
+            </div>
+        </button>
+        
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="openModal('<h3>Import Schedule</h3><p>Import from Primavera P6 or Microsoft Project</p>')">
+            <div class="card-info">
+                <i class="bi bi-upload" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">Import Schedule</div>
+                <div class="card-meta">Upload existing project files</div>
+            </div>
+        </button>
+        
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="window.location.href='{{ url_for('main.project_reports', project_id=1) }}'">
+            <div class="card-info">
+                <i class="bi bi-bar-chart" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">Generate Report</div>
+                <div class="card-meta">Create progress or budget report</div>
+            </div>
+        </button>
+        
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="openModal('<h3>Team Members</h3><p>Invite team members to collaborate</p>')">
+            <div class="card-info">
+                <i class="bi bi-people" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">Invite Team</div>
+                <div class="card-meta">Add collaborators</div>
+            </div>
+        </button>
+    </div>
+</div>
+
+<!-- Recently Added Row -->
+<div class="row-container">
+    <h2 class="row-title">Recently Added</h2>
+    <div class="row-cards">
+        <div class="netflix-card">
+            <div class="card-image">
+                <i class="bi bi-file-text"></i>
+            </div>
+            <div class="card-info">
+                <div class="card-title">Foundation Drawings</div>
+                <div class="card-meta">Submittal • Due in 5 days</div>
+            </div>
+        </div>
+        
+        <div class="netflix-card">
+            <div class="card-image">
+                <i class="bi bi-tools"></i>
+            </div>
+            <div class="card-info">
+                <div class="card-title">Equipment Delivery</div>
+                <div class="card-meta">Resource • Tomorrow</div>
+            </div>
+        </div>
+        
+        <div class="netflix-card">
+            <div class="card-image">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="card-info">
+                <div class="card-title">Inspection</div>
+                <div class="card-meta">Milestone • Next week</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Hover effects for cards
+    const cards = document.querySelectorAll('.netflix-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.05)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+</script>
+{% endblock %}
