@@ -1,11 +1,13 @@
 import os
 from dotenv import load_dotenv
 
+# Load .env but ignore DATABASE_URL
 load_dotenv()
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///construction.db'
+    # Always use SQLite - ignore any DATABASE_URL from environment
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///instance/construction.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Security
@@ -14,3 +16,10 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     REMEMBER_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
     REMEMBER_COOKIE_HTTPONLY = True
+
+class TestingConfig(Config):
+    TESTING = True
+    WTF_CSRF_ENABLED = False
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
