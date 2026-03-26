@@ -169,6 +169,9 @@
 <!-- Tasks Section -->
 <div style="margin-bottom: 30px;">
     <h2 class="section-title">Tasks</h2>
+    <button id="add-task-btn" class="btn-netflix mb-3" style="font-size: 16px;">
+        <i class="bi bi-plus-circle"></i> Add Task
+    </button>
     {% if project.tasks %}
     <div class="tasks-list">
         {% for task in project.tasks %}
@@ -220,6 +223,101 @@
 
 <!-- Back Link -->
 <div style="margin-top: 30px;">
+    <!-- Add Task Modal -->
+    <div class="modal" id="addTaskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Task</h2>
+                <button class="close-modal" id="close-task-modal">&times;</button>
+            </div>
+            <form id="task-form">
+                <div class="form-group">
+                    <label class="form-label">Task Name *</label>
+                    <input type="text" class="form-control" id="task-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="task-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Start Date *</label>
+                    <input type="date" class="form-control" id="task-start-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date *</label>
+                    <input type="date" class="form-control" id="task-end-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn-outline-netflix" id="cancel-task">Cancel</button>
+                    <button type="submit" class="btn-netflix">Create Task</button>
+                </div>
+            </form>
+            <div id="task-error" class="alert alert-danger" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const projectId = {{ project.id }};
+        
+        document.getElementById('add-task-btn').addEventListener('click', () => {
+            document.getElementById('addTaskModal').classList.add('active');
+        });
+        
+        document.getElementById('close-task-modal').addEventListener('click', closeTaskModal);
+        document.getElementById('cancel-task').addEventListener('click', closeTaskModal);
+        
+        function closeTaskModal() {
+            document.getElementById('addTaskModal').classList.remove('active');
+            document.getElementById('task-form').reset();
+            document.getElementById('task-error').style.display = 'none';
+        }
+        
+        document.getElementById('task-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('task-name').value,
+                description: document.getElementById('task-description').value,
+                start_date: document.getElementById('task-start-date').value,
+                end_date: document.getElementById('task-end-date').value,
+                priority: document.getElementById('task-priority').value
+            };
+            
+            try {
+                const response = await fetch(`/api/projects/${projectId}/tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Task created successfully!');
+                    closeTaskModal();
+                    location.reload();  // Reload to show new task
+                } else {
+                    document.getElementById('task-error').textContent = result.error || 'Failed to create task';
+                    document.getElementById('task-error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('task-error').textContent = 'Network error. Please try again.';
+                document.getElementById('task-error').style.display = 'block';
+            }
+        });
+    </script>
+
     <a href="{{ url_for('main.dashboard') }}" class="btn-outline-netflix">
         <i class="bi bi-arrow-left"></i> Back to Dashboard
     </a>
