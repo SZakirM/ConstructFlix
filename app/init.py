@@ -4,7 +4,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 from flask_socketio import SocketIO
-from config import Config
+from config import Config, TestingConfig
 import os
 from app.utils.logging_config import setup_logging, log_security_event
 import redis
@@ -24,8 +24,22 @@ limiter = Limiter(key_func=get_remote_address)
 def create_app(config_class=Config):
     """Application factory pattern"""
     app = Flask(__name__)
+    if isinstance(config_class, str):
+        if config_class.lower() == 'testing':
+            config_class = TestingConfig
+        elif config_class.lower() in ['default', 'config', 'base']:
+            config_class = Config
+        else:
+            # attempt import path as fallback
+            try:
+                from werkzeug.utils import import_string
+                config_class = import_string(config_class)
+            except Exception as e:
+                raise ValueError(f"Unknown config class: {config_class}") from e
     app.config.from_object(config_class)
-    
+    if app.config.get('TESTING'):
+        app.config['WTF_CSRF_ENABLED'] = False
+
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)

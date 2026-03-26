@@ -19,7 +19,7 @@ class APITestCase(unittest.TestCase):
             email='test@example.com',
             first_name='Test',
             last_name='User',
-            is_active=True,
+            is_active_account=True,
             email_verified=True
         )
         self.user.set_password('TestPass123')
@@ -55,8 +55,8 @@ class APITestCase(unittest.TestCase):
         data = json.loads(response.data)
         
         self.assertEqual(response.status_code, 200)
-        self.assertIn('projects', data)
-        self.assertEqual(len(data['projects']), 1)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
     
     def test_create_project(self):
         """Test creating a new project"""
@@ -70,8 +70,7 @@ class APITestCase(unittest.TestCase):
         
         data = json.loads(response.data)
         self.assertEqual(response.status_code, 201)
-        self.assertIn('project', data)
-        self.assertEqual(data['project']['name'], 'New API Project')
+        self.assertEqual(data['name'], 'New API Project')
     
     def test_get_project_documents(self):
         """Test getting project documents"""

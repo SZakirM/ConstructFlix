@@ -1,4 +1,4 @@
-﻿# app/models/project.py
+# app/models/project.py
 from datetime import datetime
 from app import db
 
@@ -21,9 +21,10 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    # Relationships - use string references to avoid circular imports
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
     milestones = db.relationship('Milestone', backref='project', lazy=True, cascade='all, delete-orphan')
+    # Note: resources backref is created automatically by Resource model
     
     def to_dict(self):
         """Convert project to dictionary"""

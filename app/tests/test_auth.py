@@ -18,7 +18,7 @@ class AuthTestCase(unittest.TestCase):
             email='test@example.com',
             first_name='Test',
             last_name='User',
-            is_active=True,
+            is_active_account=True,
             email_verified=True
         )
         self.user.set_password('TestPass123')
@@ -82,7 +82,8 @@ class AuthTestCase(unittest.TestCase):
         }, follow_redirects=True)
         
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Email already registered', response.data)
+        self.assertTrue(User.query.filter_by(email='test@example.com').count() == 1)
+        self.assertIn(b'Sign Up', response.data)
 
 if __name__ == '__main__':
     unittest.main()

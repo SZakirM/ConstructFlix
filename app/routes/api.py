@@ -132,33 +132,52 @@ def get_tasks(project_id):
 @api_bp.route('/projects/<int:project_id>/tasks', methods=['POST'])
 @login_required
 def create_task(project_id):
-    """Create new task"""
-    data = request.json
-    
-    task = Task(
-        project_id=project_id,
-        name=data.get('name'),
-        description=data.get('description'),
-        start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
-        end_date=datetime.strptime(data['end_date'], '%Y-%m-%d').date(),
-        assignee_id=data.get('assignee_id'),
-        priority=data.get('priority', 'medium'),
-        cost_estimate=data.get('cost_estimate')
-    )
-    
-    db.session.add(task)
-    db.session.commit()
-    
-    # Add dependencies if provided
-    if 'dependencies' in data:
-        for dep_id in data['dependencies']:
-            task.add_dependency(dep_id)
-    
-    # Notify assignee
-    if task.assignee_id:
-        NotificationService.task_assigned(task, task.assignee)
-    
-    return jsonify(task.to_dict()), 201
+    """Create new task with permission check and error handling"""
+    try:
+        # Verify project access
+        project = Project.query.get_or_404(project_id)
+        if project.created_by != current_user.id:
+            return jsonify({'error': 'Permission denied: You must own this project to create tasks'}), 403
+        
+        data = request.json
+        if not all(key in data for key in ['name', 'start_date', 'end_date']):
+            return jsonify({'error': 'Missing required fields: name, start_date, end_date'}), 400
+        
+        task = Task(
+            project_id=project_id,
+            name=data['name'],
+            description=data.get('description', ''),
+            start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
+            end_date=datetime.strptime(data['end_date'], '%Y-%m-%d').date(),
+            assignee_id=data.get('assignee_id'),
+            priority=data.get('priority', 'medium'),
+            status='not_started',
+            cost_estimate=data.get('cost_estimate')
+        )
+        
+        db.session.add(task)
+        db.session.flush()  # Get ID before commit
+        
+        # Add dependencies if provided
+        if 'dependencies' in data:
+            for dep in data['dependencies']:
+                task.add_dependency(dep['depends_on_id'])
+        
+        db.session.commit()
+        
+        # Notify assignee
+        if task.assignee:
+            from app.services.notification_service import NotificationService
+            NotificationService.task_assigned(task, task.assignee)
+        
+        return jsonify(task.to_dict()), 201
+        
+    except ValueError as e:
+        db.session.rollback()
+        return jsonify({'error': f'Invalid date format: {str(e)}'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Task creation failed: {str(e)}'}), 500
 
 @api_bp.route('/tasks/<int:task_id>', methods=['PUT'])
 @login_required

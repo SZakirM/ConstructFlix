@@ -18,5 +18,4 @@ result = runner.run(suite)
 
 # Exit with appropriate code
 sys.exit(0 if result.wasSuccessful() else 1)
-</parameter>
-</create_file>
+

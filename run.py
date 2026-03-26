@@ -10,6 +10,14 @@ import ssl
 
 app = create_app()
 
+# Ensure instance folder exists for SQLite database
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+os.makedirs(instance_path, exist_ok=True)
+
+# Create missing tables automatically in development
+with app.app_context():
+    db.create_all()
+
 @app.shell_context_processor
 def make_shell_context():
     from app.models.user import User
@@ -20,8 +28,12 @@ def make_shell_context():
 if __name__ == '__main__':
     if os.environ.get('FLASK_ENV') == 'production':
         # Production with HTTPS
+        cert_file = 'ssl/cert.pem'
+        key_file = 'ssl/key.pem'
+        if not os.path.exists(cert_file) or not os.path.exists(key_file):
+            raise FileNotFoundError(f"Missing SSL files for production: {cert_file} and {key_file} must exist.")
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain('ssl/cert.pem', 'ssl/key.pem')
+        context.load_cert_chain(cert_file, key_file)
         socketio.run(app, host='0.0.0.0', port=443, ssl_context=context)
     else:
         # Development
