@@ -136,6 +136,36 @@ The app exposes RESTful API endpoints under `/api` including:
 - `POST /api/resources/<id>/allocate`
 - `POST /api/resources/<id>/release`
 
+## Docker Deployment (Production)
+
+### Troubleshooting Docker on Windows
+- Install Docker Desktop, enable WSL2 (`wsl --install` as admin, reboot).
+- Start Docker Desktop GUI (tray green).
+- Verify: `docker info` no errors.
+- Service: `sc start com.docker.service` (admin).
+
+### Deploy
+1. Copy `.env.example` to `.env` (edit secrets):
+```
+POSTGRES_DB=constructflix
+POSTGRES_USER=constructflix_user
+POSTGRES_PASSWORD=securepass
+SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your@gmail.com
+MAIL_PASSWORD=app_password
+DOMAIN=http://localhost
+```
+
+2. `docker compose up --build -d`
+
+3. http://localhost (Nginx 80/443).
+4. Logs: `docker compose logs -f`.
+5. Down: `docker compose down -v`.
+
+Services: Flask (gunicorn), Postgres13, Redis6, Nginx, Celery+Beat.
+
 ## Notes
 
 - The app automatically creates the `instance/` folder and database tables when started.
