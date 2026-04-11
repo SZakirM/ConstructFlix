@@ -2,6 +2,14 @@
 from datetime import datetime
 from app import db
 
+project_members = db.Table(
+    'project_members',
+    db.Column('project_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('role', db.String(50), default='member'),
+    db.Column('added_at', db.DateTime, default=datetime.utcnow)
+)
+
 
 class Project(db.Model):
     """Project management model"""
@@ -24,6 +32,12 @@ class Project(db.Model):
     # Relationships - use string references to avoid circular imports
     tasks = db.relationship('Task', backref='project', lazy=True, cascade='all, delete-orphan')
     milestones = db.relationship('Milestone', backref='project', lazy=True, cascade='all, delete-orphan')
+    members = db.relationship(
+        'User',
+        secondary=project_members,
+        backref=db.backref('member_projects', lazy='dynamic'),
+        lazy='dynamic'
+    )
     # Note: resources backref is created automatically by Resource model
     
     def to_dict(self):
@@ -40,5 +54,6 @@ class Project(db.Model):
             'actual_cost': float(self.actual_cost) if self.actual_cost else None,
             'progress': self.progress,
             'created_by': self.created_by,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'members': [u.full_name for u in self.members] if self.members is not None else []
         }

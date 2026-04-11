@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}System Logs - Admin - ConstructFlix{% endblock %}
+
+{% block content %}
+<div style="padding-top: 20px;">
+    <h2>System Logs</h2>
+    <div style="background: #1f1f1f; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.5; color: #e5e5e5; max-height: 600px; overflow-y: auto;">
+        {% for line in logs %}
+            {{ line }}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

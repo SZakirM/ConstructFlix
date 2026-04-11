@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects - Admin - ConstructFlix{% endblock %}
+
+{% block content %}
+<div style="padding-top: 20px;">
+    <h2>Projects</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background: #1f1f1f; color: #fff;">
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">ID</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Name</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Status</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects.items %}
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 12px;">{{ project.id }}</td>
+                <td style="padding: 12px;">{{ project.name }}</td>
+                <td style="padding: 12px;">{{ project.status }}</td>
+                <td style="padding: 12px;">{{ project.start_date }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="padding: 20px; text-align: center; color: #8c8c8c;">No projects found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if projects.pages > 1 %}
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+        {% if projects.has_prev %}
+            <a href="{{ url_for('admin.projects', page=projects.prev_num) }}" class="btn-outline-netflix">Previous</a>
+        {% endif %}
+        {% if projects.has_next %}
+            <a href="{{ url_for('admin.projects', page=projects.next_num) }}" class="btn-outline-netflix">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Users - Admin - ConstructFlix{% endblock %}
+
+{% block content %}
+<div style="padding-top: 20px;">
+    <h2>Users</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background: #1f1f1f; color: #fff;">
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">ID</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Name</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Email</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Role</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Status</th>
+                <th style="padding: 12px; border-bottom: 1px solid #333; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users.items %}
+            <tr style="border-bottom: 1px solid #333;">
+                <td style="padding: 12px;">{{ user.id }}</td>
+                <td style="padding: 12px;">{{ user.first_name }} {{ user.last_name }}</td>
+                <td style="padding: 12px;">{{ user.email }}</td>
+                <td style="padding: 12px;">{{ user.role }}</td>
+                <td style="padding: 12px;">{{ 'Active' if user.is_active else 'Inactive' }}</td>
+                <td style="padding: 12px;">
+                    <a href="{{ url_for('admin.user_detail', user_id=user.id) }}" style="color: #e50914; text-decoration: none;">View</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="padding: 20px; text-align: center; color: #8c8c8c;">No users found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if users.pages > 1 %}
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+        {% if users.has_prev %}
+            <a href="{{ url_for('admin.users', page=users.prev_num) }}" class="btn-outline-netflix">Previous</a>
+        {% endif %}
+        {% if users.has_next %}
+            <a href="{{ url_for('admin.users', page=users.next_num) }}" class="btn-outline-netflix">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

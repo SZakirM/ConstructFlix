@@ -1,11 +1,11 @@
-# Task Restriction Extension TODO
+# Final Test & PR Completion TODO
 
 ## Steps:
-- [x] Step 1: Update permission check in app/routes/api.py create_task() endpoint
-- [x] Step 2: Add permission checks in app/routes/api.py update_task() endpoint for general updates and assignee changes
-- [x] Step 3: Run tests to verify (python run_tests.py) - auth tests passed, api import issue pre-existing
-- [x] Step 4: Mark complete and cleanup TODO.md
+- [ ] Step 1: Stage all changes (git add .)
+- [ ] Step 2: Commit changes with test pass message
+- [ ] Step 3: Push branch to origin
+- [ ] Step 4: Create GitHub PR via gh CLI
+- [ ] Step 5: Mark complete
 
-**Status:** Complete
-**Approved Plan:** Restrict task creation/assignment to project owner, admin, or engineer roles.
-
+**Status:** In progress  
+**Notes:** Tests 7/7 passed. On branch blackboxai/task-creation-fix-v3 with unstaged changes ready.

@@ -61,6 +61,13 @@ def create_app(config_class=Config):
             return User.query.get(int(user_id))
         except Exception:
             return None
+
+    @login_manager.unauthorized_handler
+    def unauthorized_callback():
+        from flask import request, jsonify, redirect, url_for
+        if request.path.startswith('/api/'):
+            return jsonify({'error': 'Authentication required'}), 401
+        return redirect(url_for('auth.login', next=request.path))
     
     # Setup logging
     setup_logging(app)

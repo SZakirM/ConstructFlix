@@ -1,6 +1,7 @@
 from app import db, socketio
 from app.models.notification import Notification
 from flask import current_app
+from flask_login import current_user
 from flask_socketio import emit, join_room, leave_room
 from datetime import datetime
 

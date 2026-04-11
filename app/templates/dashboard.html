@@ -182,19 +182,37 @@
             </div>
         </button>
         
-        <button class="netflix-card" style="border: none; text-align: left;" onclick="window.location.href='{{ url_for('main.project_reports', project_id=1) }}'">
+        {% if report_project %}
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="window.location.href='{{ url_for('main.project_reports', project_id=report_project.id) }}'">
             <div class="card-info">
                 <i class="bi bi-bar-chart" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
                 <div class="card-title">Generate Report</div>
                 <div class="card-meta">Create progress or budget report</div>
             </div>
         </button>
+        {% else %}
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="openModal('<h3>No Projects Yet</h3><p>Create a project first to generate reports.</p>')">
+            <div class="card-info">
+                <i class="bi bi-bar-chart" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">Generate Report</div>
+                <div class="card-meta">Create progress or budget report</div>
+            </div>
+        </button>
+        {% endif %}
         
         <button class="netflix-card" style="border: none; text-align: left;" onclick="openModal('<h3>Team Members</h3><p>Invite team members to collaborate</p>')">
             <div class="card-info">
                 <i class="bi bi-people" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
                 <div class="card-title">Invite Team</div>
                 <div class="card-meta">Add collaborators</div>
+            </div>
+        </button>
+
+        <button class="netflix-card" style="border: none; text-align: left;" onclick="window.location.href='{{ url_for('auth.logout') }}'">
+            <div class="card-info">
+                <i class="bi bi-box-arrow-right" style="font-size: 32px; color: #e50914; margin-bottom: 10px;"></i>
+                <div class="card-title">Sign Out</div>
+                <div class="card-meta">Log out of your account</div>
             </div>
         </button>
     </div>

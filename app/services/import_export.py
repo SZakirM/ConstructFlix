@@ -197,7 +197,10 @@ class ImportExportService:
         reader = csv.DictReader(StringIO(file_content))
         
         if data_type == 'tasks':
+            imported_count = 0
             for row in reader:
+                if not row.get('Name'):
+                    continue
                 task = Task(
                     project_id=project_id,
                     name=row['Name'],
@@ -209,12 +212,68 @@ class ImportExportService:
                     priority=row.get('Priority', 'medium')
                 )
                 db.session.add(task)
+                imported_count += 1
             
             db.session.commit()
-            return len(list(reader))
+            return imported_count
         
         return 0
-    
+
+    @staticmethod
+    def import_from_excel(file_content, project_id, data_type='tasks'):
+        """Import data from Excel"""
+        from io import BytesIO
+
+        if data_type != 'tasks':
+            return 0
+
+        excel_buffer = BytesIO(file_content)
+        try:
+            xls = pd.ExcelFile(excel_buffer)
+        except Exception as e:
+            raise ValueError('Unable to parse Excel file: ' + str(e))
+
+        sheet_name = 'Tasks' if 'Tasks' in xls.sheet_names else xls.sheet_names[0]
+        excel_buffer.seek(0)
+        df = pd.read_excel(excel_buffer, sheet_name=sheet_name)
+
+        imported_count = 0
+        for _, row in df.iterrows():
+            name = row.get('Name') if 'Name' in row else row.get('name')
+            if not name or (isinstance(name, str) and not name.strip()):
+                continue
+
+            start_date_raw = row.get('Start Date') if 'Start Date' in row else row.get('start_date')
+            end_date_raw = row.get('End Date') if 'End Date' in row else row.get('end_date')
+
+            task = Task(
+                project_id=project_id,
+                name=str(name).strip(),
+                description=str(row.get('Description', '')) if row.get('Description') is not None else '',
+                start_date=ImportExportService._parse_excel_date(start_date_raw),
+                end_date=ImportExportService._parse_excel_date(end_date_raw),
+                progress=float(row.get('Progress', 0) or 0),
+                status=str(row.get('Status', 'not_started') or 'not_started'),
+                priority=str(row.get('Priority', 'medium') or 'medium')
+            )
+            db.session.add(task)
+            imported_count += 1
+
+        db.session.commit()
+        return imported_count
+
+    @staticmethod
+    def _parse_excel_date(value):
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValueError('Missing date value')
+        if isinstance(value, datetime):
+            return value.date()
+        try:
+            parsed = pd.to_datetime(value, errors='raise')
+            return parsed.date()
+        except Exception as e:
+            raise ValueError(f'Invalid date value: {value}')
+
     @staticmethod
     def import_from_primvera(file_content):
         """Import from Primavera P6 XML format"""

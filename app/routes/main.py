@@ -1,11 +1,14 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models.user import User
 from app.models.project import Project
 from app.models.task import Task, Milestone
+from app.models.notification import Notification
+from app.services.email_service import send_email
 from datetime import datetime, date
 from flask import Blueprint
+from urllib.parse import quote_plus
 
 main_bp = Blueprint('main', __name__)
 
@@ -14,6 +17,9 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     return render_template('index.html')
+
+def _can_assign_project_members():
+    return current_user.role in ('admin', 'engineer')
 
 @main_bp.route('/dashboard')
 @login_required
@@ -50,11 +56,14 @@ def dashboard():
         'overdue_tasks': overdue_tasks
     }
     
+    report_project = projects[0] if projects else None
+    
     return render_template('dashboard.html', 
                          projects=projects, 
                          tasks=tasks,
                          upcoming_milestones=upcoming_milestones,
                          stats=stats,
+                         report_project=report_project,
                          now=datetime.now())
 
 @main_bp.route('/projects')
@@ -105,7 +114,99 @@ def new_project():
 @login_required
 def project_detail(project_id):
     project = Project.query.get_or_404(project_id)
-    return render_template('project_detail.html', project=project)
+    users = User.query.order_by(User.first_name.asc()).all()
+    invite_text = f"Join our project {project.name} on ConstructFlix: {request.url}"
+    whatsapp_url = f"https://wa.me/?text={quote_plus(invite_text)}"
+    can_assign = _can_assign_project_members()
+    return render_template('project_detail.html', project=project, users=users, whatsapp_url=whatsapp_url, can_assign=can_assign)
+
+@main_bp.route('/project/<int:project_id>/start', methods=['POST'])
+@login_required
+def start_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    if project.created_by != current_user.id and current_user.role != 'admin':
+        flash('You do not have permission to start this project.', 'danger')
+        return redirect(url_for('main.project_detail', project_id=project_id))
+
+    if project.status != 'active':
+        project.status = 'active'
+        db.session.commit()
+        flash('Project started successfully!', 'success')
+    else:
+        flash('Project is already active.', 'info')
+
+    return redirect(url_for('main.project_detail', project_id=project_id))
+
+@main_bp.route('/project/<int:project_id>/invite', methods=['POST'])
+@login_required
+def invite_project_member(project_id):
+    project = Project.query.get_or_404(project_id)
+    if not _can_assign_project_members():
+        flash('Only admin and engineer users can assign team members.', 'danger')
+        return redirect(url_for('main.project_detail', project_id=project_id))
+
+    user_id = request.form.get('user_id')
+    email = request.form.get('email', '').strip().lower()
+    user = None
+
+    if user_id:
+        try:
+            user = User.query.get(int(user_id))
+        except (ValueError, TypeError):
+            user = None
+
+    if not user and email:
+        user = User.query.filter_by(email=email).first()
+
+    if not user and not email:
+        flash('Please select a user or enter an email to invite.', 'warning')
+        return redirect(url_for('main.project_detail', project_id=project_id))
+
+    if user:
+        if project.members.filter_by(id=user.id).first():
+            flash('This user is already assigned to the project.', 'info')
+        else:
+            project.members.append(user)
+            db.session.commit()
+            Notification.send_to_user(
+                user_id=user.id,
+                notification_type='project_assignment',
+                title=f'Assigned to project {project.name}',
+                message=f'You have been added to project "{project.name}".',
+                priority='high',
+                data={'project_id': project.id}
+            )
+            send_email(
+                subject=f'You have been added to {project.name}',
+                recipients=user.email,
+                text_body=f'Hello {user.full_name},\n\nYou have been assigned to the project "{project.name}" on ConstructFlix. Visit {request.url} to view the project.',
+                html_body=f'<p>Hello {user.full_name},</p><p>You have been assigned to the project "{project.name}" on ConstructFlix.</p><p><a href="{request.url}">View project</a></p>'
+            )
+            flash('User assigned to the project and notified.', 'success')
+    else:
+        invite_link = f"https://{current_app.config.get('DOMAIN', 'localhost:5000')}/auth/register"
+        send_email(
+            subject=f'Invitation to join project {project.name}',
+            recipients=email,
+            text_body=f'Hello,\n\nYou have been invited to join the project "{project.name}" on ConstructFlix. Register here: {invite_link}',
+            html_body=f'<p>Hello,</p><p>You have been invited to join the project "{project.name}" on ConstructFlix.</p><p><a href="{invite_link}">Register now</a></p>'
+        )
+        flash('Invitation email sent to the provided address.', 'success')
+
+    return redirect(url_for('main.project_detail', project_id=project_id))
+
+@main_bp.route('/project/<int:project_id>/delete', methods=['POST'])
+@login_required
+def delete_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    if project.created_by != current_user.id and current_user.role != 'admin':
+        flash('You do not have permission to delete this project.', 'danger')
+        return redirect(url_for('main.project_detail', project_id=project_id))
+
+    db.session.delete(project)
+    db.session.commit()
+    flash('Project removed successfully.', 'success')
+    return redirect(url_for('main.projects'))
 
 @main_bp.route('/project/<int:project_id>/schedule')
 @login_required

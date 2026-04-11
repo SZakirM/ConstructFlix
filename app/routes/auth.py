@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, session
+from flask import render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
@@ -65,8 +65,13 @@ def register():
 def logout():
     logout_user()
     session.clear()
+
+    response = redirect(url_for('auth.login'))
+    remember_cookie = current_app.config.get('REMEMBER_COOKIE_NAME', 'remember_token')
+    response.delete_cookie(remember_cookie)
+
     flash('You have been signed out.', 'info')
-    return redirect(url_for('auth.login'))
+    return response
 
 @auth_bp.route('/profile')
 @login_required

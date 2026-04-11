@@ -16,14 +16,14 @@ def gantt_view(project_id):
 @login_required
 def gantt_data(project_id):
     """Get Gantt chart data as JSON"""
-    chart_json = GanttChartService.create_gantt_chart(project_id)
-    if chart_json:
-        return jsonify({'chart': json.loads(chart_json)})
+    chart_data = GanttChartService.generate_interactive_gantt(project_id)
+    if chart_data:
+        return jsonify({'chart': chart_data})
     return jsonify({'error': 'No data available'}), 404
 
+# Temporarily disable critical path until implemented
 @gantt_bp.route('/api/project/<int:project_id>/critical-path')
 @login_required
 def critical_path(project_id):
     """Get critical path data"""
-    critical_path = GanttChartService.get_critical_path(project_id)
-    return jsonify({'critical_path': critical_path})
+    return jsonify({'critical_path': [], 'message': 'Critical path analysis coming soon'})

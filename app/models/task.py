@@ -125,8 +125,48 @@ class Task(db.Model):
             'days_late': self.days_late,
             'assignee': self.assignee.full_name if self.assignee else None,
             'dependencies': [dep.depends_on_id for dep in self.dependencies_from],
-            'subtasks': [subtask.id for subtask in self.subtasks]
+        'subtasks': [subtask.id for subtask in self.subtasks]
         }
+
+    def add_dependency(self, target_task_id, dependency_type='FS', lag_days=0):
+        """Add dependency to another task.
+        FS = Finish-to-Start (default)
+        SS = Start-to-Start
+        FF = Finish-to-Finish  
+        SF = Start-to-Finish
+        """
+        if target_task_id == self.id:
+            raise ValueError("Cannot create self-dependency")
+        
+        # Check if exists
+        existing = TaskDependency.query.filter_by(
+            task_id=self.id, 
+            depends_on_id=target_task_id
+        ).first()
+        if existing:
+            return existing
+        
+        dependency = TaskDependency(
+            task_id=self.id,
+            depends_on_id=target_task_id,
+            dependency_type=dependency_type,
+            lag_days=lag_days
+        )
+        db.session.add(dependency)
+        db.session.commit()
+        return dependency
+
+    def remove_dependency(self, target_task_id):
+        """Remove dependency"""
+        dep = TaskDependency.query.filter_by(
+            task_id=self.id, 
+            depends_on_id=target_task_id
+        ).first()
+        if dep:
+            db.session.delete(dep)
+            db.session.commit()
+            return True
+        return False
 
 
 class TaskDependency(db.Model):
