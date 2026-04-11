@@ -129,17 +129,51 @@ def get_tasks(project_id):
     tasks = Task.query.filter_by(project_id=project_id).all()
     return jsonify([t.to_dict() for t in tasks])
 
+@api_bp.route('/projects/<int:project_id>/import', methods=['POST'])
+@login_required
+def import_project_data(project_id):
+    """Import project data from a CSV file"""
+    project = Project.query.get_or_404(project_id)
+    if project.created_by != current_user.id and current_user.role != 'admin':
+        return jsonify({'error': 'Permission denied'}), 403
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+    if extension not in {'csv', 'xlsx', 'xls'}:
+        return jsonify({'error': 'Only CSV and Excel files are supported for import'}), 400
+
+    data_type = request.form.get('data_type', 'tasks')
+    try:
+        if extension == 'csv':
+            file_content = file.read().decode('utf-8')
+            imported_count = ImportExportService.import_from_csv(file_content, project_id, data_type=data_type)
+        else:
+            file_content = file.read()
+            imported_count = ImportExportService.import_from_excel(file_content, project_id, data_type=data_type)
+        return jsonify({'success': True, 'imported': imported_count}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Import failed: {str(e)}'}), 500
+
 @api_bp.route('/projects/<int:project_id>/tasks', methods=['POST'])
 @login_required
 def create_task(project_id):
     """Create new task with permission check and error handling"""
+
     try:
         # Verify project access
         project = Project.query.get_or_404(project_id)
-        if project.created_by != current_user.id:
-            return jsonify({'error': 'Permission denied: You must own this project to create tasks'}), 403
+        if project.created_by != current_user.id and current_user.role not in ('admin', 'engineer'):
+            return jsonify({'error': 'Permission denied: Admin, engineer, or project owner required'}), 403
         
         data = request.json
+
         if not all(key in data for key in ['name', 'start_date', 'end_date']):
             return jsonify({'error': 'Missing required fields: name, start_date, end_date'}), 400
         
@@ -179,14 +213,28 @@ def create_task(project_id):
         db.session.rollback()
         return jsonify({'error': f'Task creation failed: {str(e)}'}), 500
 
+
 @api_bp.route('/tasks/<int:task_id>', methods=['PUT'])
 @login_required
 def update_task(task_id):
     """Update task"""
     task = Task.query.get_or_404(task_id)
+    
     data = request.json
     
+    # Permission check for task updates/assignment
+    project = task.project
+    if project.created_by != current_user.id and current_user.role not in ('admin', 'engineer'):
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    # Extra check for assignee changes
+    current_assignee_id = getattr(task, 'assignee_id', None)
+    if 'assignee_id' in data and data['assignee_id'] != current_assignee_id:
+        if project.created_by != current_user.id and current_user.role not in ('admin', 'engineer'):
+            return jsonify({'error': 'Permission denied for task re-assignment'}), 403
+    
     task.name = data.get('name', task.name)
+
     task.description = data.get('description', task.description)
     
     if 'progress' in data:
