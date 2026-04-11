@@ -23,6 +23,11 @@ limiter = Limiter(key_func=get_remote_address)
 
 def create_app(config_class=Config):
     """Application factory pattern"""
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn="https://c99b9cfeffef638f7018127eeef05d65@o4510748339142656.ingest.de.sentry.io/4511201719353424",
+        send_default_pii=True,
+    )
     app = Flask(__name__)
     if isinstance(config_class, str):
         if config_class.lower() == 'testing':
